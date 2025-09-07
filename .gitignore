@@ -1,0 +1,4 @@
+.env*
+calldash-*
+__pycache__
+.dockerignore
