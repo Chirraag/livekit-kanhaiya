@@ -63,8 +63,8 @@ USER appuser
 # Pre-download any ML models or files the agent needs
 # This ensures the container is ready to run immediately without downloading
 # dependencies at runtime, which improves startup time and reliability
-RUN python "agents.py" download-files
+RUN python "agent.py" download-files
 
 # Run the application
 # The "start" command tells the worker to connect to LiveKit and begin waiting for jobs.
-CMD ["python", "agents.py", "start"]
+CMD ["python", "agent.py", "start"]

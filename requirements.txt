@@ -9,3 +9,5 @@ langchain_community
 requests
 python-dotenv
 ddgs
+firebase_admin
+dotenv
