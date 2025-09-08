@@ -1,6 +1,17 @@
 from dotenv import load_dotenv
 import logging
 
+# Configure logging to show only INFO level and above (hide DEBUG)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+)
+
+# Set specific loggers to INFO level to hide DEBUG messages
+logging.getLogger('asyncio').setLevel(logging.INFO)
+logging.getLogger('livekit.agents').setLevel(logging.INFO)
+logging.getLogger('websockets.client').setLevel(logging.INFO)
+
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions
 from livekit.plugins import (
