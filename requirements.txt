@@ -1,13 +1,8 @@
 livekit-agents
 livekit-plugins-openai
 livekit-plugins-silero
-livekit-plugins-google
-livekit-plugins-noise-cancellation
-mem0ai
-duckduckgo-search
+livekit-plugins-deepgram
 langchain_community
 requests
 python-dotenv
-ddgs
 firebase_admin
-dotenv

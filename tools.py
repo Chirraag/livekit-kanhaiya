@@ -71,23 +71,23 @@ async def end_call(
         # Get job context
         job_ctx = get_job_context()
         
-        logging.info(f"🔌 Disconnecting agent from room...")
+        logging.info(f"🔌 Deleting room to end call...")
         
-        # Disconnect the agent from the room
-        await job_ctx.shutdown()
+        # Delete the room to end the call (based on reference implementation)
+        await job_ctx.api.room.delete_room(
+            api.DeleteRoomRequest(room=job_ctx.room.name)
+        )
         
         logging.info(f"✅ Call ended successfully: {reason}")
         return f"Call ended: {reason}. Goodbye!"
         
     except Exception as e:
-        logging.error(f"❌ Error ending call: {e}")
-        # Even if there's an error, try to shutdown
-        try:
-            job_ctx = get_job_context()
-            await job_ctx.shutdown()
-            logging.info(f"✅ Call ended successfully: {reason} (after error recovery)")
+        # Handle specific "room not found" error as success (room already deleted)
+        if "requested room does not exist" in str(e) or "not_found" in str(e):
+            logging.info(f"✅ Call ended successfully: {reason} (room already deleted)")
             return f"Call ended: {reason}. Goodbye!"
-        except:
+        else:
+            logging.error(f"❌ Error ending call: {e}")
             return f"Error ending call: {str(e)}"
 
 

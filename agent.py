@@ -13,13 +13,14 @@ logging.getLogger('livekit.agents').setLevel(logging.INFO)
 logging.getLogger('websockets.client').setLevel(logging.INFO)
 
 from livekit import agents
-from livekit.agents import AgentSession, Agent, RoomInputOptions
+from livekit.agents import AgentSession, Agent
 from livekit.plugins import (
-    noise_cancellation,
+    openai,
+    deepgram,
+    silero,
 )
-from livekit.plugins import google
 from config_loader import config_loader
-from tools import get_dynamic_tools, search_web
+from tools import get_dynamic_tools
 load_dotenv()
 
 
@@ -77,15 +78,15 @@ TOOL USAGE GUIDELINES:
 
 Use these tools actively and appropriately to assist users effectively."""
         
+        # Use separate LLM (not realtime) like reference implementation
         super().__init__(
             instructions=enhanced_instructions,
-            llm=google.beta.realtime.RealtimeModel(
-            voice="Aoede",
-            temperature=0.1,
-            vertexai=False
-        ),
+            llm=openai.LLM(
+                model="gpt-4.1-nano",
+                temperature=0.7,
+                max_completion_tokens=750,
+            ),
             tools=dynamic_tools,
-
         )
         
 
@@ -96,19 +97,33 @@ async def entrypoint(ctx: agents.JobContext):
     begin_message = config.get('beginMessage', "Hello! I'm your AI assistant. How can I help you today?")
     session_instruction = config_loader.get_session_instruction(begin_message)
     
-    session = AgentSession()
+    # Create session with separate STT and TTS like reference implementation
+    session = AgentSession(
+        stt=deepgram.STT(
+            model="nova-2-general",
+            language="en-US",
+            detect_language=False,
+            interim_results=True,
+            punctuate=True,
+            endpointing_ms=425,
+        ),
+        tts=openai.TTS(
+            model="tts-1",
+            voice="nova",
+        ),
+        vad=silero.VAD.load(
+            min_speech_duration=0.1,
+            min_silence_duration=0.3,
+            padding_duration=0.3,
+            sample_rate=16000,
+            max_buffered_speech=60.0,
+        ),
+    )
 
     try:
         await session.start(
             room=ctx.room,
             agent=Assistant(),
-            room_input_options=RoomInputOptions(
-                # LiveKit Cloud enhanced noise cancellation
-                # - If self-hosting, omit this parameter
-                # - For telephony applications, use `BVCTelephony` for best results
-                video_enabled=True,
-                noise_cancellation=noise_cancellation.BVC(),
-            ),
         )
 
         await ctx.connect()
